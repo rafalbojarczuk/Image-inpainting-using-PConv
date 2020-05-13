@@ -18,6 +18,5 @@ class MaskedDataGenerator(ImageDataGenerator):
 			mask = np.stack([mask_generator.sample(seed) for _ in range(original_image.shape[0])], axis=0)
 			masked_image = deepcopy(original_image)
 			masked_image *= mask
-
          
 			yield [masked_image, mask], original_image
