@@ -12,8 +12,8 @@ def vgg16_features(layers, weights='imagenet'):
         features_model: keras.models.Model instance to extract the features.
 
     """
-    assert isinstance(flayers,list), "First argument 'layers' must be a list"
-    assert len(flayers) > 1, "Length of 'layers' must be > 1."
+    assert isinstance(layers,list), "First argument 'layers' must be a list"
+    assert len(layers) > 1, "Length of 'layers' must be > 1."
   
     base_model = VGG16(include_top=False, weights=weights)
 
@@ -47,29 +47,29 @@ def gram_matrix(x):
     return gram
 
 def total_loss_function(mask, vgg16_weights='imagenet'):
-	"""
-	I_gt - ground truth image - y_true
-	I_out - predicted image - y_pred
-	I_comp - non-masked part is ground truth and masked region is taken from predicted image
-	"""
+    """
+    I_gt - ground truth image - y_true
+    I_out - predicted image - y_pred
+    I_comp - non-masked part is ground truth and masked region is taken from predicted image
+    """
 
-	vgg16_layers = ['block1_pool', 'block2_pool', 'block3_pool']
-	vgg = vgg16_feature_model(vgg16_layers, weights=vgg16_weights)
-	def loss(y_true, y_pred):
-		I_comp = mask*y_true + (1-mask) * y_pred
-		vgg_gt   = vgg_model(y_true)
-        vgg_out  = vgg_model(y_pred)
-        vgg_comp = vgg_model(y_comp)
+    vgg16_layers = ['block1_pool', 'block2_pool', 'block3_pool']
+    vgg = vgg16_features(vgg16_layers, weights=vgg16_weights)
+    def loss(y_true, y_pred):
+        I_comp = mask*y_true + (1-mask) * y_pred
+        vgg_gt   = vgg(y_true)
+        vgg_out  = vgg(y_pred)
+        vgg_comp = vgg(I_comp)
 
-		l_valid = valid_loss(y_true, y_pred, mask)
-		l_hole  = hole_loss(y_true, y_pred, mask)
-		l_perceptual  = perceptual_loss(vgg_out, vgg_gt, vgg_comp)
-		l_style_out = style_loss(vgg_out, vgg_gt) 
-		l_style_comp = style_loss(vgg_comp, vgg_gt)
-		l_tv = total_variance_loss(mask, y_comp)
+        l_valid = valid_loss(y_true, y_pred, mask)
+        l_hole  = hole_loss(y_true, y_pred, mask)
+        l_perceptual  = perceptual_loss(vgg_out, vgg_gt, vgg_comp)
+        l_style_out = style_loss(vgg_out, vgg_gt) 
+        l_style_comp = style_loss(vgg_comp, vgg_gt)
+        l_tv = total_variance_loss(mask, I_comp)
 
-		return l_valid + 6.*l_hole + 0.05*l_perceptual + 120.*(l_style_out + l_style_comp) + 0.1*l_tv		
-
+        return l_valid + 6.*l_hole + 0.05*l_perceptual + 120.*(l_style_out + l_style_comp) + 0.1*l_tv		
+    return loss
 def l1_loss(y_true, y_pred):
 	if K.ndim(y_true) == 4:
 	    return K.mean(K.abs(y_pred - y_true), axis=[1,2,3])
@@ -87,14 +87,14 @@ def hole_loss(y_true, y_pred, mask):
 def perceptual_loss(vgg_out, vgg_gt, vgg_comp):
 	loss = 0
 	for o, c, g in zip(vgg_out, vgg_comp, vgg_gt):
-	    loss += self.l1(o, g) + self.l1(c, g)
+	    loss += l1_loss(o, g) + l1_loss(c, g)
 	return loss
 
 def style_loss(output, vgg_gt):
     """Style loss based on output/computation, used for both eq. 4 & 5 in paper"""
     loss = 0
     for o, g in zip(output, vgg_gt):
-        loss += self.l1(self.gram_matrix(o), self.gram_matrix(g))
+        loss += l1_loss(gram_matrix(o), gram_matrix(g))
     return loss
 
 

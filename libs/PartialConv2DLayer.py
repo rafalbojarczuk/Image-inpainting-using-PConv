@@ -6,7 +6,7 @@ from keras.layers import Conv2D
 
 class PartialConv2D(Conv2D):
   
-    def __init__(self, *args, n_channels=3, mono=False, **kwargs):
+    def __init__(self, *args, n_channels=3, last_layer=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_layer = last_layer
         self.input_spec = [InputSpec(ndim=4), InputSpec(ndim=4)]
@@ -79,19 +79,19 @@ class PartialConv2D(Conv2D):
         img_conv *= scaling_factor
 
         if self.use_bias:
-            img_output = K.bias_add(
-                img_output,
+            img_conv = K.bias_add(
+                img_conv,
                 self.bias,
                 data_format=self.data_format)
 
         # Apply activations on the image
         if self.activation is not None:
-            img_output = self.activation(img_output)
+            img_conv = self.activation(img_conv)
             
         if self.last_layer:
-            return img_output
+            return img_conv
 
-        return [img_output, mask_output]
+        return [img_conv, mask_output]
 
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)

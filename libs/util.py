@@ -50,6 +50,10 @@ def torch_postprocessing(x, return_int=True):
     else:
         return x.clip(0, 255)
 
+#def PSNR(y_true, y_pred):
+#    return -10.0*K.log(K.mean(K.square(y_pred - y_true))) / K.log(10.0)
+
+
 
 class MaskGenerator():
 
