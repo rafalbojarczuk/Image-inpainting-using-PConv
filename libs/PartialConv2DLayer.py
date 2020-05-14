@@ -25,7 +25,7 @@ class PartialConv2D(Conv2D):
             raise ValueError('The channel dimension of the inputs should be defined. Found `None`.')
         
         self.input_dim = input_shape[0][channel_axis]
-        self.window_size = self.kernel_size[0] * self.kernel_size[1]
+        self.window_size = self.kernel_size[0] * self.kernel_size[1] * self.input_dim
         # Image kernel:
         kernel_shape = self.kernel_size + (self.input_dim, self.filters)
         self.kernel  = self.add_weight(shape=kernel_shape,
@@ -35,7 +35,9 @@ class PartialConv2D(Conv2D):
                                       constraint=self.kernel_constraint)
         # Mask kernel:
         self.kernel_mask = K.ones(shape=self.kernel_size + (self.input_dim, self.filters))
-
+        self.last_size = (None, None, None, None)
+        self.update_mask = None
+        self.mask_ratio = None
         # Image bias:
         if self.use_bias:
             self.bias = self.add_weight(shape=(self.filters,),
@@ -53,36 +55,44 @@ class PartialConv2D(Conv2D):
     def call(self, inputs):
         #inputs is tuple containing (image, mask)
         assert isinstance(inputs, list) and len(inputs) == 2, f"PartialConvolution2D must be called on a list of two tensors [img, mask]. Instead got: + {str(inputs)}"
+        image_in, mask_in = inputs
 
-        img_conv = K.conv2d(inputs[0] * inputs[1],
-                              self.kernel, 
+        img_conv = K.conv2d(image_in * mask_in,
+                              self.kernel,
                               strides=self.strides, 
                               padding=self.padding, 
                               data_format=self.data_format)
 
         #This is sum(M)
-        mask_conv = K.conv2d(inputs[1], 
+        self.update_mask = K.conv2d(mask_in, 
                          self.kernel_mask, 
                          strides=self.strides, 
                          padding=self.padding, 
                          data_format=self.data_format)
 
-        scaling_factor = self.window_size / (mask_conv + 1e-8)
+        self.mask_ratio = self.window_size / (self.update_mask + 1e-8)
 
         #updated mask (equals 1 where sum(M) > 0)
-        mask_output = K.clip(mask_conv, 0, 1)
+        self.update_mask = K.clip(self.update_mask, 0, 1)
 
         # Remove values where there are holes
-        scaling_factor *= mask_output
+        self.mask_ratio = self.mask_ratio*self.update_mask
 
         #img output is zero where sum(M) is 0
-        img_conv *= scaling_factor
 
         if self.use_bias:
             img_conv = K.bias_add(
                 img_conv,
+                -self.bias,
+                data_format=self.data_format)
+            img_conv *= self.mask_ratio
+            img_conv = K.bias_add(
+                img_conv,
                 self.bias,
                 data_format=self.data_format)
+            img_conv *= self.update_mask
+        else:
+            img_conv *= self.mask_ratio
 
         # Apply activations on the image
         if self.activation is not None:
@@ -91,7 +101,9 @@ class PartialConv2D(Conv2D):
         if self.last_layer:
             return img_conv
 
-        return [img_conv, mask_output]
+        return [img_conv, self.update_mask ]
+
+
 
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)

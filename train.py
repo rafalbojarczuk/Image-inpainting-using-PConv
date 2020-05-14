@@ -11,9 +11,9 @@ VGG16_WEIGHTS   = r'E:\Python\Image-inpainting-using-PConv\vgg16_pytorch2keras.h
 WEIGHTS_DIR     = "weights/"
 
 BATCH_SIZE      = 4
-STEPS_PER_EPOCH = 100
-EPOCHS_STAGE1   = 6
-EPOCHS_STAGE2   = 8
+STEPS_PER_EPOCH = 5000
+EPOCHS_STAGE1   = 15
+EPOCHS_STAGE2   = 20
 STEPS_VAL       = 10
 IMAGE_SHAPE      = (256, 256)
 STAGE_1         = True # Initial training if True, Fine-tuning if False 

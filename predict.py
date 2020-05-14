@@ -11,14 +11,9 @@ VGG16_WEIGHTS   = r'E:\Python\Image-inpainting-using-PConv\vgg16_pytorch2keras.h
 WEIGHTS_DIR     = "weights/"
 
 BATCH_SIZE      = 4
-STEPS_PER_EPOCH = 100
-EPOCHS_STAGE1   = 6
-EPOCHS_STAGE2   = 8
-STEPS_VAL       = 10
 IMAGE_SHAPE      = (256, 256)
-STAGE_1         = True # Initial training if True, Fine-tuning if False 
-LOAD            = False
-LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.06-32.65-23.03.hdf5"
+
+LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.06-4.35-3.07.hdf5"
 
 test_datagen = MaskedDataGenerator(preprocessing_function=torch_preprocessing)
 test_generator = test_datagen.flow_from_directory(
