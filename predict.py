@@ -13,7 +13,7 @@ WEIGHTS_DIR     = "weights/"
 BATCH_SIZE      = 4
 IMAGE_SHAPE      = (256, 256)
 
-LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.06-4.35-3.07.hdf5"
+LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.23-4.40-2.06.hdf5"
 
 test_datagen = MaskedDataGenerator(preprocessing_function=torch_preprocessing)
 test_generator = test_datagen.flow_from_directory(

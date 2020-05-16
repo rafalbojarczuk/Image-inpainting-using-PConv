@@ -12,13 +12,13 @@ WEIGHTS_DIR     = "weights/"
 
 BATCH_SIZE      = 4
 STEPS_PER_EPOCH = 5000
-EPOCHS_STAGE1   = 15
-EPOCHS_STAGE2   = 20
+EPOCHS_STAGE1   = 13
+EPOCHS_STAGE2   = 13
 STEPS_VAL       = 10
 IMAGE_SHAPE      = (256, 256)
 STAGE_1         = True # Initial training if True, Fine-tuning if False 
-LOAD            = False
-LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.06-4.35-3.07.hdf5"
+LOAD            = True
+LAST_CHECKPOINT =  WEIGHTS_DIR + "initial/weights.13-4.41-2.23.hdf5"
 
 train_datagen = MaskedDataGenerator(preprocessing_function=torch_preprocessing, horizontal_flip=True)
 train_generator = train_datagen.flow_from_directory(
@@ -38,9 +38,9 @@ val_generator = val_datagen.flow_from_directory(
 if STAGE_1:
 	lr = 0.0002
 	fine_tuning = False
-	initial_epoch = 0
+	initial_epoch = 13
 	stage_name = 'initial/'
-	epochs = EPOCHS_STAGE1
+	epochs = 13+10
 else: 
 	lr = 0.00005
 	fine_tuning = True

@@ -35,7 +35,7 @@ def gram_matrix(x):
     # Permute channels and get resulting shape
     x = K.permute_dimensions(x, (0, 3, 1, 2))
     shape = K.shape(x)
-    B, C, H, W = shape[0], shape[3], shape[1], shape[2]
+    B, C, H, W = shape[0], shape[1], shape[2], shape[3]
     
     # Reshape x and do batch dot product
     features = K.reshape(x, K.stack([B, C, H*W]))
