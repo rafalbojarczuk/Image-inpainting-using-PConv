@@ -85,37 +85,50 @@ class MaskGenerator():
         if rand_seed:
             seed(rand_seed)
 
-    def _generate_mask(self):
-        """Generates a random irregular mask with lines, circles and elipses"""
+    def _generate_mask(self, minCoverage, maxCoverage):
 
-        img = np.zeros((self.height, self.width, self.channels), np.uint8)
+        isGoodCoverage = False
+        # noRejectedMasks = 0
+        while not isGoodCoverage:
+            """Generates a random irregular mask with lines, circles and elipses"""
 
-        # Set size scale
-        size = int((self.width + self.height) * 0.03)
-        if self.width < 64 or self.height < 64:
-            raise Exception("Width and Height of mask must be at least 64!")
+            img = np.zeros((self.height, self.width, self.channels), np.uint8)
 
-        # Draw random lines
-        for _ in range(randint(1, 20)):
-            x1, x2 = randint(1, self.width), randint(1, self.width)
-            y1, y2 = randint(1, self.height), randint(1, self.height)
-            thickness = randint(3, size)
-            cv2.line(img,(x1,y1),(x2,y2),(1,1,1),thickness)
+            # Set size scale
+            size = int((self.width + self.height) * 0.03)
+            if self.width < 64 or self.height < 64:
+                raise Exception("Width and Height of mask must be at least 64!")
 
-        # Draw random circles
-        for _ in range(randint(1, 20)):
-            x1, y1 = randint(1, self.width), randint(1, self.height)
-            radius = randint(3, size)
-            cv2.circle(img,(x1,y1),radius,(1,1,1), -1)
+            # Draw random lines
+            for _ in range(randint(1, 5 + int(maxCoverage*50))):
+                x1, x2 = randint(1, self.width), randint(1, self.width)
+                y1, y2 = randint(1, self.height), randint(1, self.height)
+                thickness = randint(3, size)
+                cv2.line(img,(x1,y1),(x2,y2),(1,1,1),thickness)
 
-        # Draw random ellipses
-        for _ in range(randint(1, 20)):
-            x1, y1 = randint(1, self.width), randint(1, self.height)
-            s1, s2 = randint(1, self.width), randint(1, self.height)
-            a1, a2, a3 = randint(3, 180), randint(3, 180), randint(3, 180)
-            thickness = randint(3, size)
-            cv2.ellipse(img, (x1,y1), (s1,s2), a1, a2, a3,(1,1,1), thickness)
+            # Draw random circles
+            for _ in range(randint(1, 5 + int(maxCoverage*50))):
+                x1, y1 = randint(1, self.width), randint(1, self.height)
+                radius = randint(3, size)
+                cv2.circle(img,(x1,y1),radius,(1,1,1), -1)
 
+            # Draw random ellipses
+            for _ in range(randint(1, 5 + int(maxCoverage*50))):
+                x1, y1 = randint(1, self.width), randint(1, self.height)
+                s1, s2 = randint(1, self.width), randint(1, self.height)
+                a1, a2, a3 = randint(3, 180), randint(3, 180), randint(3, 180)
+                thickness = randint(3, size)
+                cv2.ellipse(img, (x1,y1), (s1,s2), a1, a2, a3,(1,1,1), thickness)
+            coverage = np.sum(img == (1,1,1))/(3*self.width * self.height)
+            if coverage < maxCoverage and coverage > minCoverage:
+                isGoodCoverage = True
+            # else:
+            #     noRejectedMasks += 1
+
+
+        # print("minCoverage ", minCoverage,
+        #       "maxCoverage", maxCoverage,
+        #       ": rejected ", noRejectedMasks)
         return 1-img
 
     # def _load_mask(self, rotation=True, dilation=True, cropping=True):
@@ -152,6 +165,6 @@ class MaskGenerator():
         #     return self._load_mask()
         # else:
         #     return self._generate_mask()
-        return self._generate_mask()
-
-
+        minCoverage = randint(0, 4)*0.15
+        maxCoverage = minCoverage + 0.15
+        return self._generate_mask(minCoverage, maxCoverage)
